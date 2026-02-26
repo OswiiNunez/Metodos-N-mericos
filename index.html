@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Métodos Numéricos</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-calculator"></i>
+                <h1>Métodos Numéricos</h1>
+            </div>
+            <p class="subtitle">Calculadora de Ecuaciones Diferenciales y Raíces</p>
+        </header>
+
+        <section class="method-selection">
+            <h2><i class="fas fa-list-check"></i> Selecciona un Método</h2>
+            <div class="method-cards">
+                <div class="method-card" data-method="euler" onclick="selectMethod('euler')">
+                    <div class="card-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>Euler Mejorado</h3>
+                    <p>Método de Heun para EDOs</p>
+                </div>
+                <div class="method-card" data-method="runge" onclick="selectMethod('runge')">
+                    <div class="card-icon">
+                        <i class="fas fa-wave-square"></i>
+                    </div>
+                    <h3>Runge-Kutta</h3>
+                    <p>Método RK4 de 4to orden</p>
+                </div>
+                <div class="method-card" data-method="newton" onclick="selectMethod('newton')">
+                    <div class="card-icon">
+                        <i class="fas fa-crosshairs"></i>
+                    </div>
+                    <h3>Newton-Raphson</h3>
+                    <p>Búsqueda de raíces</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="calculator-section" id="calculatorSection">
+            <!-- Euler Mejorado -->
+            <div class="calculator-panel" id="eulerPanel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-chart-line"></i> Método de Euler Mejorado</h2>
+                    <button class="info-btn" onclick="toggleInfo('eulerInfo')">
+                        <i class="fas fa-info-circle"></i> Info
+                    </button>
+                </div>
+                
+                <div class="info-box" id="eulerInfo">
+                    <h4>¿Qué es el Método de Euler Mejorado?</h4>
+                    <p>También conocido como <strong>Método de Heun</strong>, es un método numérico para resolver ecuaciones diferenciales ordinarias (EDO) de la forma:</p>
+                    <div class="formula">dy/dx = f(x, y)</div>
+                    <p>Es más preciso que el Euler simple porque usa un promedio de pendientes:</p>
+                    <div class="formula">y<sub>n+1</sub> = y<sub>n</sub> + (h/2)[f(x<sub>n</sub>, y<sub>n</sub>) + f(x<sub>n+1</sub>, ỹ<sub>n+1</sub>)]</div>
+                    <p>Donde ỹ<sub>n+1</sub> = y<sub>n</sub> + h·f(x<sub>n</sub>, y<sub>n</sub>)</p>
+                </div>
+
+                <form class="input-form" onsubmit="calculateEuler(event)">
+                    <div class="form-group">
+                        <label for="eulerFunction">
+                            <i class="fas fa-function"></i> Función f(x, y)
+                        </label>
+                        <input type="text" id="eulerFunction" placeholder="Ej: 3*x + 2*y, x*y, Math.sin(x)+y" required>
+                        <small>Usa: +, -, *, /, Math.sin(), Math.cos(), Math.exp(), Math.pow(base, exp), Math.sqrt()</small>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="eulerX0">
+                                <i class="fas fa-arrow-right"></i> Valor inicial x₀
+                            </label>
+                            <input type="number" id="eulerX0" step="any" placeholder="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="eulerY0">
+                                <i class="fas fa-arrow-up"></i> Valor inicial y₀
+                            </label>
+                            <input type="number" id="eulerY0" step="any" placeholder="1" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="eulerXf">
+                                <i class="fas fa-flag-checkered"></i> Valor final x<sub>f</sub>
+                            </label>
+                            <input type="number" id="eulerXf" step="any" placeholder="2" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="eulerH">
+                                <i class="fas fa-arrows-left-right"></i> Incremento (h)
+                            </label>
+                            <input type="number" id="eulerH" step="any" placeholder="0.1" required>
+                            <small>Tamaño del paso</small>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="calculate-btn">
+                        <i class="fas fa-play"></i> Calcular
+                    </button>
+                </form>
+
+                <div class="results-container" id="eulerResults"></div>
+            </div>
+
+            <!-- Runge-Kutta -->
+            <div class="calculator-panel" id="rungePanel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-wave-square"></i> Método de Runge-Kutta (RK4)</h2>
+                    <button class="info-btn" onclick="toggleInfo('rungeInfo')">
+                        <i class="fas fa-info-circle"></i> Info
+                    </button>
+                </div>
+                
+                <div class="info-box" id="rungeInfo">
+                    <h4>¿Qué es el Método de Runge-Kutta?</h4>
+                    <p>Es el método más popular para resolver EDOs debido a su <strong>alta precisión</strong>. El RK4 (4to orden) usa cuatro evaluaciones de la función:</p>
+                    <div class="formula">
+                        k₁ = f(x<sub>n</sub>, y<sub>n</sub>)<br>
+                        k₂ = f(x<sub>n</sub> + h/2, y<sub>n</sub> + h·k₁/2)<br>
+                        k₃ = f(x<sub>n</sub> + h/2, y<sub>n</sub> + h·k₂/2)<br>
+                        k₄ = f(x<sub>n</sub> + h, y<sub>n</sub> + h·k₃)
+                    </div>
+                    <div class="formula">y<sub>n+1</sub> = y<sub>n</sub> + (h/6)(k₁ + 2k₂ + 2k₃ + k₄)</div>
+                </div>
+
+                <form class="input-form" onsubmit="calculateRungeKutta(event)">
+                    <div class="form-group">
+                        <label for="rungeFunction">
+                            <i class="fas fa-function"></i> Función f(x, y)
+                        </label>
+                        <input type="text" id="rungeFunction" placeholder="Ej: x + y, 2*x*y, Math.exp(-x)*y" required>
+                        <small>Usa: +, -, *, /, Math.sin(), Math.cos(), Math.exp(), Math.pow(base, exp), Math.sqrt()</small>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rungeX0">
+                                <i class="fas fa-arrow-right"></i> Valor inicial x₀
+                            </label>
+                            <input type="number" id="rungeX0" step="any" placeholder="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="rungeY0">
+                                <i class="fas fa-arrow-up"></i> Valor inicial y₀
+                            </label>
+                            <input type="number" id="rungeY0" step="any" placeholder="1" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rungeXf">
+                                <i class="fas fa-flag-checkered"></i> Valor final x<sub>f</sub>
+                            </label>
+                            <input type="number" id="rungeXf" step="any" placeholder="2" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="rungeH">
+                                <i class="fas fa-arrows-left-right"></i> Incremento (h)
+                            </label>
+                            <input type="number" id="rungeH" step="any" placeholder="0.1" required>
+                            <small>Tamaño del paso</small>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="calculate-btn">
+                        <i class="fas fa-play"></i> Calcular
+                    </button>
+                </form>
+
+                <div class="results-container" id="rungeResults"></div>
+            </div>
+
+            <!-- Newton-Raphson -->
+            <div class="calculator-panel" id="newtonPanel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-crosshairs"></i> Método de Newton-Raphson</h2>
+                    <button class="info-btn" onclick="toggleInfo('newtonInfo')">
+                        <i class="fas fa-info-circle"></i> Info
+                    </button>
+                </div>
+                
+                <div class="info-box" id="newtonInfo">
+                    <h4>¿Qué es el Método de Newton-Raphson?</h4>
+                    <p>Es un método iterativo para encontrar <strong>raíces de funciones</strong>, es decir, valores de x donde f(x) = 0.</p>
+                    <p>Utiliza la derivada de la función para aproximarse rápidamente a la raíz:</p>
+                    <div class="formula">x<sub>n+1</sub> = x<sub>n</sub> - f(x<sub>n</sub>) / f'(x<sub>n</sub>)</div>
+                    <p><strong>Nota:</strong> Puedes ingresar la derivada manualmente o dejar que se calcule numéricamente.</p>
+                </div>
+
+                <form class="input-form" onsubmit="calculateNewtonRaphson(event)">
+                    <div class="form-group">
+                        <label for="newtonFunction">
+                            <i class="fas fa-function"></i> Función f(x)
+                        </label>
+                        <input type="text" id="newtonFunction" placeholder="Ej: x*x - 4, Math.cos(x) - x, x**3 - 2*x - 5" required>
+                        <small>Usa: +, -, *, /, **, Math.sin(), Math.cos(), Math.exp(), Math.log(), Math.sqrt()</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newtonDerivative">
+                            <i class="fas fa-superscript"></i> Derivada f'(x) <span class="optional">(opcional)</span>
+                        </label>
+                        <input type="text" id="newtonDerivative" placeholder="Ej: 2*x (dejar vacío para cálculo numérico)">
+                        <small>Si se deja vacío, se calculará numéricamente</small>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="newtonX0">
+                                <i class="fas fa-location-dot"></i> Valor inicial x₀
+                            </label>
+                            <input type="number" id="newtonX0" step="any" placeholder="1" required>
+                            <small>Estimación inicial de la raíz</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="newtonTol">
+                                <i class="fas fa-bullseye"></i> Tolerancia
+                            </label>
+                            <input type="number" id="newtonTol" step="any" placeholder="0.0001" value="0.0001" required>
+                            <small>Error permitido</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newtonMaxIter">
+                            <i class="fas fa-repeat"></i> Máximo de iteraciones
+                        </label>
+                        <input type="number" id="newtonMaxIter" placeholder="100" value="100" required>
+                    </div>
+
+                    <button type="submit" class="calculate-btn">
+                        <i class="fas fa-play"></i> Calcular
+                    </button>
+                </form>
+
+                <div class="results-container" id="newtonResults"></div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <p>Calculadora de Métodos Numéricos © 2026</p>
+            <p>Oswaldo Nuñez Marrero 8 "A" IGYDS </p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
