@@ -408,6 +408,24 @@ body {
     font-size: 1.3rem;
 }
 
+/* ===== CHART WRAPPER ===== */
+.chart-wrapper {
+    background: var(--background-dark);
+    border: 1px solid var(--background-light);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 25px;
+    height: 380px;
+    position: relative;
+    box-shadow: var(--shadow-sm);
+}
+
+.chart-wrapper canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* ===== TABLE ===== */
 .result-table {
     width: 100%;
     border-collapse: collapse;
@@ -521,6 +539,10 @@ body {
     .result-table th,
     .result-table td {
         padding: 10px 8px;
+    }
+
+    .chart-wrapper {
+        height: 280px;
     }
 }
 

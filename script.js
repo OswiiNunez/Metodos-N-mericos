@@ -1,3 +1,13 @@
+// Cargar Chart.js dinámicamente
+(function loadChartJS() {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
+    document.head.appendChild(script);
+})();
+
+// Registro de instancias de gráficas para destruirlas antes de redibujar
+const chartInstances = {};
+
 function selectMethod(method) {
     document.querySelectorAll('.method-card').forEach(card => {
         card.classList.remove('active');
@@ -31,13 +41,88 @@ function evaluateFunction(funcStr, variables) {
             const regex = new RegExp(`\\b${key}\\b`, 'g');
             expression = expression.replace(regex, `(${value})`);
         }
-        
         return eval(expression);
     } catch (error) {
         throw new Error(`Error al evaluar la función: ${error.message}`);
     }
 }
 
+// ===== Renderizar gráfica genérica =====
+function renderChart(canvasId, labels, datasets, title) {
+    // Destruir instancia previa si existe
+    if (chartInstances[canvasId]) {
+        chartInstances[canvasId].destroy();
+        delete chartInstances[canvasId];
+    }
+
+    const ctx = document.getElementById(canvasId).getContext('2d');
+
+    chartInstances[canvasId] = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 800,
+                easing: 'easeInOutQuart'
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#f8fafc',
+                        font: { family: 'Poppins', size: 13 },
+                        padding: 20
+                    }
+                },
+                title: {
+                    display: true,
+                    text: title,
+                    color: '#60a5fa',
+                    font: { family: 'Poppins', size: 16, weight: '600' },
+                    padding: { bottom: 20 }
+                },
+                tooltip: {
+                    backgroundColor: '#1e293b',
+                    titleColor: '#60a5fa',
+                    bodyColor: '#f8fafc',
+                    borderColor: '#3b82f6',
+                    borderWidth: 1,
+                    callbacks: {
+                        label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(6)}`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#94a3b8', font: { family: 'Poppins', size: 11 } },
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    title: {
+                        display: true,
+                        text: 'x',
+                        color: '#94a3b8',
+                        font: { family: 'Poppins', size: 13 }
+                    }
+                },
+                y: {
+                    ticks: { color: '#94a3b8', font: { family: 'Poppins', size: 11 } },
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    title: {
+                        display: true,
+                        text: 'y',
+                        color: '#94a3b8',
+                        font: { family: 'Poppins', size: 13 }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// ===== Método de Euler Mejorado =====
 function calculateEuler(event) {
     event.preventDefault();
     
@@ -63,7 +148,6 @@ function calculateEuler(event) {
         while (x < xf - 0.0001) {
             const k1 = evaluateFunction(funcStr, { x, y });
             const yPredictor = y + h * k1;
-            
             const xNext = x + h;
             const k2 = evaluateFunction(funcStr, { x: xNext, y: yPredictor });
             
@@ -108,6 +192,10 @@ function displayEulerResults(results, funcStr) {
             <p>Valor final: <span class="highlight">y(${lastResult.x}) ≈ ${lastResult.y}</span></p>
             <p>Número de iteraciones: <span class="highlight">${results.length - 1}</span></p>
         </div>
+
+        <div class="chart-wrapper">
+            <canvas id="eulerChart"></canvas>
+        </div>
         
         <div class="table-container">
             <table class="result-table">
@@ -136,6 +224,38 @@ function displayEulerResults(results, funcStr) {
             </table>
         </div>
     `;
+
+    // Datos para la gráfica
+    const labels = results.map(r => typeof r.x === 'number' ? r.x.toFixed(4) : r.x);
+    const yValues = results.map(r => typeof r.y === 'number' ? r.y : null);
+    const predictorValues = results.map(r => typeof r.yPredictor === 'number' ? r.yPredictor : null);
+
+    renderChart('eulerChart', labels, [
+        {
+            label: 'y aproximado (Euler Mejorado)',
+            data: yValues,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59,130,246,0.15)',
+            pointBackgroundColor: '#60a5fa',
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            borderWidth: 2.5,
+            fill: true,
+            tension: 0.35
+        },
+        {
+            label: 'ỹ predictor',
+            data: predictorValues,
+            borderColor: '#f59e0b',
+            backgroundColor: 'transparent',
+            pointBackgroundColor: '#f59e0b',
+            pointRadius: 3,
+            borderWidth: 1.5,
+            borderDash: [6, 4],
+            fill: false,
+            tension: 0.35
+        }
+    ], 'Solución aproximada — Euler Mejorado (Heun)');
 }
 
 // ===== Método de Runge-Kutta (RK4) =====
@@ -209,6 +329,10 @@ function displayRungeResults(results, funcStr) {
             <p>Valor final: <span class="highlight">y(${lastResult.x}) ≈ ${lastResult.y}</span></p>
             <p>Número de iteraciones: <span class="highlight">${results.length - 1}</span></p>
         </div>
+
+        <div class="chart-wrapper">
+            <canvas id="rungeChart"></canvas>
+        </div>
         
         <div class="table-container">
             <table class="result-table">
@@ -239,6 +363,37 @@ function displayRungeResults(results, funcStr) {
             </table>
         </div>
     `;
+
+    const labels = results.map(r => typeof r.x === 'number' ? r.x.toFixed(4) : r.x);
+    const yValues = results.map(r => typeof r.y === 'number' ? r.y : null);
+    const k1Values = results.map(r => typeof r.k1 === 'number' ? r.k1 : null);
+
+    renderChart('rungeChart', labels, [
+        {
+            label: 'y aproximado (RK4)',
+            data: yValues,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16,185,129,0.15)',
+            pointBackgroundColor: '#34d399',
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            borderWidth: 2.5,
+            fill: true,
+            tension: 0.35
+        },
+        {
+            label: 'k₁ (pendiente inicial)',
+            data: k1Values,
+            borderColor: '#f59e0b',
+            backgroundColor: 'transparent',
+            pointBackgroundColor: '#f59e0b',
+            pointRadius: 3,
+            borderWidth: 1.5,
+            borderDash: [6, 4],
+            fill: false,
+            tension: 0.35
+        }
+    ], 'Solución aproximada — Runge-Kutta de 4to Orden (RK4)');
 }
 
 // ===== Método de Newton-Raphson =====
@@ -290,7 +445,6 @@ function calculateNewtonRaphson(event) {
             if (error < tol) {
                 converged = true;
                 x = xNew;
-                
                 const fxFinal = evaluateFunction(funcStr, { x });
                 results.push({
                     n: n + 1,
@@ -344,6 +498,10 @@ function displayNewtonResults(results, funcStr, derivStr, converged, tol) {
             <p>Tolerancia: ${tol}</p>
             ${statusMessage}
         </div>
+
+        <div class="chart-wrapper">
+            <canvas id="newtonChart"></canvas>
+        </div>
         
         <div class="table-container">
             <table class="result-table">
@@ -372,6 +530,101 @@ function displayNewtonResults(results, funcStr, derivStr, converged, tol) {
             </table>
         </div>
     `;
+
+    // Para Newton: gráfica de convergencia — x_n vs iteración, y f(x_n) vs iteración
+    const iterLabels = results.map(r => `n=${r.n}`);
+    const xValues = results.map(r => typeof r.x === 'number' ? r.x : null);
+    const fxValues = results.map(r => typeof r.fx === 'number' ? r.fx : null);
+    const errorValues = results.map(r => typeof r.error === 'number' ? r.error : null);
+
+    // Destruir instancia previa si existe
+    if (chartInstances['newtonChart']) {
+        chartInstances['newtonChart'].destroy();
+        delete chartInstances['newtonChart'];
+    }
+
+    const ctx = document.getElementById('newtonChart').getContext('2d');
+    chartInstances['newtonChart'] = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: iterLabels,
+            datasets: [
+                {
+                    label: 'xₙ (aproximación)',
+                    data: xValues,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59,130,246,0.1)',
+                    pointBackgroundColor: '#60a5fa',
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    borderWidth: 2.5,
+                    fill: false,
+                    tension: 0.2,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'f(xₙ)',
+                    data: fxValues,
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239,68,68,0.1)',
+                    pointBackgroundColor: '#ef4444',
+                    pointRadius: 5,
+                    borderWidth: 2,
+                    borderDash: [5, 3],
+                    fill: false,
+                    tension: 0.2,
+                    yAxisID: 'y2'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 800, easing: 'easeInOutQuart' },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#f8fafc',
+                        font: { family: 'Poppins', size: 13 },
+                        padding: 20
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'Convergencia — Newton-Raphson',
+                    color: '#60a5fa',
+                    font: { family: 'Poppins', size: 16, weight: '600' },
+                    padding: { bottom: 20 }
+                },
+                tooltip: {
+                    backgroundColor: '#1e293b',
+                    titleColor: '#60a5fa',
+                    bodyColor: '#f8fafc',
+                    borderColor: '#3b82f6',
+                    borderWidth: 1
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#94a3b8', font: { family: 'Poppins', size: 11 } },
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    title: { display: true, text: 'Iteración', color: '#94a3b8', font: { family: 'Poppins', size: 13 } }
+                },
+                y: {
+                    ticks: { color: '#60a5fa', font: { family: 'Poppins', size: 11 } },
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    title: { display: true, text: 'xₙ', color: '#60a5fa', font: { family: 'Poppins', size: 13 } },
+                    position: 'left'
+                },
+                y2: {
+                    ticks: { color: '#ef4444', font: { family: 'Poppins', size: 11 } },
+                    grid: { drawOnChartArea: false },
+                    title: { display: true, text: 'f(xₙ)', color: '#ef4444', font: { family: 'Poppins', size: 13 } },
+                    position: 'right'
+                }
+            }
+        }
+    });
 }
 
 function roundTo(num, decimals) {
