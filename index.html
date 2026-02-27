@@ -46,7 +46,8 @@
         </section>
 
         <section class="calculator-section" id="calculatorSection">
-            <!-- Euler Mejorado -->
+
+            <!-- ===== Euler Mejorado ===== -->
             <div class="calculator-panel" id="eulerPanel">
                 <div class="panel-header">
                     <h2><i class="fas fa-chart-line"></i> Método de Euler Mejorado</h2>
@@ -69,7 +70,9 @@
                         <label for="eulerFunction">
                             <i class="fas fa-function"></i> Función f(x, y)
                         </label>
-                        <input type="text" id="eulerFunction" placeholder="Ej: 3*x + 2*y, x*y, Math.sin(x)+y" required>
+                        <input type="text" id="eulerFunction"
+                               value="3*x + 2*y"
+                               placeholder="Ej: 3*x + 2*y" required>
                         <small>Usa: +, -, *, /, Math.sin(), Math.cos(), Math.exp(), Math.pow(base, exp), Math.sqrt()</small>
                     </div>
                     
@@ -78,13 +81,13 @@
                             <label for="eulerX0">
                                 <i class="fas fa-arrow-right"></i> Valor inicial x₀
                             </label>
-                            <input type="number" id="eulerX0" step="any" placeholder="0" required>
+                            <input type="number" id="eulerX0" step="any" value="0" required>
                         </div>
                         <div class="form-group">
                             <label for="eulerY0">
                                 <i class="fas fa-arrow-up"></i> Valor inicial y₀
                             </label>
-                            <input type="number" id="eulerY0" step="any" placeholder="1" required>
+                            <input type="number" id="eulerY0" step="any" value="1" required>
                         </div>
                     </div>
 
@@ -93,13 +96,13 @@
                             <label for="eulerXf">
                                 <i class="fas fa-flag-checkered"></i> Valor final x<sub>f</sub>
                             </label>
-                            <input type="number" id="eulerXf" step="any" placeholder="2" required>
+                            <input type="number" id="eulerXf" step="any" value="2" required>
                         </div>
                         <div class="form-group">
                             <label for="eulerH">
                                 <i class="fas fa-arrows-left-right"></i> Incremento (h)
                             </label>
-                            <input type="number" id="eulerH" step="any" placeholder="0.1" required>
+                            <input type="number" id="eulerH" step="any" value="0.5" required>
                             <small>Tamaño del paso</small>
                         </div>
                     </div>
@@ -112,7 +115,7 @@
                 <div class="results-container" id="eulerResults"></div>
             </div>
 
-            <!-- Runge-Kutta -->
+            <!-- ===== Runge-Kutta ===== -->
             <div class="calculator-panel" id="rungePanel">
                 <div class="panel-header">
                     <h2><i class="fas fa-wave-square"></i> Método de Runge-Kutta (RK4)</h2>
@@ -138,7 +141,9 @@
                         <label for="rungeFunction">
                             <i class="fas fa-function"></i> Función f(x, y)
                         </label>
-                        <input type="text" id="rungeFunction" placeholder="Ej: x + y, 2*x*y, Math.exp(-x)*y" required>
+                        <input type="text" id="rungeFunction"
+                               value="x + y"
+                               placeholder="Ej: x + y" required>
                         <small>Usa: +, -, *, /, Math.sin(), Math.cos(), Math.exp(), Math.pow(base, exp), Math.sqrt()</small>
                     </div>
                     
@@ -147,13 +152,13 @@
                             <label for="rungeX0">
                                 <i class="fas fa-arrow-right"></i> Valor inicial x₀
                             </label>
-                            <input type="number" id="rungeX0" step="any" placeholder="0" required>
+                            <input type="number" id="rungeX0" step="any" value="0" required>
                         </div>
                         <div class="form-group">
                             <label for="rungeY0">
                                 <i class="fas fa-arrow-up"></i> Valor inicial y₀
                             </label>
-                            <input type="number" id="rungeY0" step="any" placeholder="1" required>
+                            <input type="number" id="rungeY0" step="any" value="1" required>
                         </div>
                     </div>
 
@@ -162,13 +167,13 @@
                             <label for="rungeXf">
                                 <i class="fas fa-flag-checkered"></i> Valor final x<sub>f</sub>
                             </label>
-                            <input type="number" id="rungeXf" step="any" placeholder="2" required>
+                            <input type="number" id="rungeXf" step="any" value="2" required>
                         </div>
                         <div class="form-group">
                             <label for="rungeH">
                                 <i class="fas fa-arrows-left-right"></i> Incremento (h)
                             </label>
-                            <input type="number" id="rungeH" step="any" placeholder="0.1" required>
+                            <input type="number" id="rungeH" step="any" value="0.5" required>
                             <small>Tamaño del paso</small>
                         </div>
                     </div>
@@ -181,7 +186,7 @@
                 <div class="results-container" id="rungeResults"></div>
             </div>
 
-            <!-- Newton-Raphson -->
+            <!-- ===== Newton-Raphson ===== -->
             <div class="calculator-panel" id="newtonPanel">
                 <div class="panel-header">
                     <h2><i class="fas fa-crosshairs"></i> Método de Newton-Raphson</h2>
@@ -203,7 +208,9 @@
                         <label for="newtonFunction">
                             <i class="fas fa-function"></i> Función f(x)
                         </label>
-                        <input type="text" id="newtonFunction" placeholder="Ej: x*x - 4, Math.cos(x) - x, x**3 - 2*x - 5" required>
+                        <input type="text" id="newtonFunction"
+                               value="x**3 - 2*x - 5"
+                               placeholder="Ej: x**3 - 2*x - 5" required>
                         <small>Usa: +, -, *, /, **, Math.sin(), Math.cos(), Math.exp(), Math.log(), Math.sqrt()</small>
                     </div>
 
@@ -211,7 +218,9 @@
                         <label for="newtonDerivative">
                             <i class="fas fa-superscript"></i> Derivada f'(x) <span class="optional">(opcional)</span>
                         </label>
-                        <input type="text" id="newtonDerivative" placeholder="Ej: 2*x (dejar vacío para cálculo numérico)">
+                        <input type="text" id="newtonDerivative"
+                               value="3*x**2 - 2"
+                               placeholder="Ej: 3*x**2 - 2 (dejar vacío para cálculo numérico)">
                         <small>Si se deja vacío, se calculará numéricamente</small>
                     </div>
                     
@@ -220,14 +229,14 @@
                             <label for="newtonX0">
                                 <i class="fas fa-location-dot"></i> Valor inicial x₀
                             </label>
-                            <input type="number" id="newtonX0" step="any" placeholder="1" required>
+                            <input type="number" id="newtonX0" step="any" value="2" required>
                             <small>Estimación inicial de la raíz</small>
                         </div>
                         <div class="form-group">
                             <label for="newtonTol">
                                 <i class="fas fa-bullseye"></i> Tolerancia
                             </label>
-                            <input type="number" id="newtonTol" step="any" placeholder="0.0001" value="0.0001" required>
+                            <input type="number" id="newtonTol" step="any" value="0.0001" required>
                             <small>Error permitido</small>
                         </div>
                     </div>
@@ -236,7 +245,7 @@
                         <label for="newtonMaxIter">
                             <i class="fas fa-repeat"></i> Máximo de iteraciones
                         </label>
-                        <input type="number" id="newtonMaxIter" placeholder="100" value="100" required>
+                        <input type="number" id="newtonMaxIter" value="100" required>
                     </div>
 
                     <button type="submit" class="calculate-btn">
@@ -246,10 +255,12 @@
 
                 <div class="results-container" id="newtonResults"></div>
             </div>
+
         </section>
 
         <footer class="footer">
-            <p>Oswaldo Nuñez Marrero 8 "A" IGYDS </p>
+            <p>Calculadora de Métodos Numéricos © 2026</p>
+            <p>Oswaldo Nuñez Marrero 8 "A" IGYDS</p>
         </footer>
     </div>
 

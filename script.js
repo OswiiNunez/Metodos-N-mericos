@@ -143,31 +143,36 @@ function calculateEuler(event) {
         let y = y0;
         let n = 0;
         
-        results.push({ n, x, y, k1: '-', yPredictor: '-', k2: '-', error: '-' });
+        // fila 0: valores iniciales, sin k1/k2/yNext/error
+        results.push({ i: 0, x: roundTo(x, 6), fxy: roundTo(y, 6), k1: '-', k2: '-', yNext: '-', error: '-' });
         
         while (x < xf - 0.0001) {
+            const i = results.length - 1; // índice de la fila actual (0-based del paso)
+            const fxy = y;                // f(xi, yi) = yi actual
             const k1 = evaluateFunction(funcStr, { x, y });
             const yPredictor = y + h * k1;
             const xNext = x + h;
             const k2 = evaluateFunction(funcStr, { x: xNext, y: yPredictor });
             
-            const yPrev = y;
-            y = y + (h / 2) * (k1 + k2);
+            const yNew = y + (h / 2) * (k1 + k2);
+
+            // Error en notación científica igual a la imagen de referencia
+            const errorVal = Math.abs(yNew) > 1e-12
+                ? Math.abs((yNew - y) / yNew)
+                : Math.abs(yNew - y);
+            const error = errorVal.toExponential(6); // ej: 3.260000e-01
+
+            y = yNew;
             x = xNext;
             n++;
-            
-            // Error relativo porcentual: |(y_nuevo - y_predictor) / y_nuevo| * 100
-            const error = Math.abs(y) > 1e-12 
-                ? roundTo(Math.abs((y - yPredictor) / y) * 100, 6)
-                : roundTo(Math.abs(y - yPredictor), 6);
 
             results.push({ 
-                n, 
-                x: roundTo(x, 6), 
-                y: roundTo(y, 6), 
-                k1: roundTo(k1, 6), 
-                yPredictor: roundTo(yPredictor, 6), 
-                k2: roundTo(k2, 6),
+                i:     i + 1,
+                x:     roundTo(x,    6), 
+                fxy:   roundTo(fxy,  6),
+                k1:    roundTo(k1,   6), 
+                k2:    roundTo(k2,   6),
+                yNext: roundTo(y,    6),
                 error
             });
         }
@@ -196,7 +201,7 @@ function displayEulerResults(results, funcStr) {
         
         <div class="result-summary">
             <p>Función: <span class="highlight">f(x, y) = ${funcStr}</span></p>
-            <p>Valor final: <span class="highlight">y(${lastResult.x}) ≈ ${lastResult.y}</span></p>
+            <p>Valor final: <span class="highlight">y(${lastResult.x}) ≈ ${lastResult.yNext}</span></p>
             <p>Número de iteraciones: <span class="highlight">${results.length - 1}</span></p>
         </div>
 
@@ -208,24 +213,24 @@ function displayEulerResults(results, funcStr) {
             <table class="result-table">
                 <thead>
                     <tr>
-                        <th>n</th>
-                        <th>xₙ</th>
-                        <th>yₙ</th>
-                        <th>k₁ = f(xₙ, yₙ)</th>
-                        <th>ỹₙ₊₁ (predictor)</th>
-                        <th>k₂ = f(xₙ₊₁, ỹₙ₊₁)</th>
-                        <th>Error relativo (%)</th>
+                        <th>i</th>
+                        <th>xᵢ</th>
+                        <th>f(xᵢ, yᵢ)</th>
+                        <th>k₁</th>
+                        <th>k₂</th>
+                        <th>yᵢ₊₁</th>
+                        <th>Error</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${results.map(r => `
                         <tr>
-                            <td>${r.n}</td>
+                            <td>${r.i}</td>
                             <td>${r.x}</td>
-                            <td>${r.y}</td>
+                            <td>${r.fxy}</td>
                             <td>${r.k1}</td>
-                            <td>${r.yPredictor}</td>
                             <td>${r.k2}</td>
+                            <td>${r.yNext}</td>
                             <td>${r.error}</td>
                         </tr>
                     `).join('')}
@@ -235,9 +240,9 @@ function displayEulerResults(results, funcStr) {
     `;
 
     // Datos para la gráfica
-    const labels = results.map(r => typeof r.x === 'number' ? r.x.toFixed(4) : r.x);
-    const yValues = results.map(r => typeof r.y === 'number' ? r.y : null);
-    const predictorValues = results.map(r => typeof r.yPredictor === 'number' ? r.yPredictor : null);
+    const labels = results.map(r => typeof r.x === 'number' ? r.x.toFixed(4) : String(r.x));
+    const yValues = results.map(r => typeof r.yNext === 'number' ? r.yNext : (typeof r.fxy === 'number' ? r.fxy : null));
+    const predictorValues = results.map(r => typeof r.fxy === 'number' ? r.fxy : null);
 
     renderChart('eulerChart', labels, [
         {
@@ -288,9 +293,10 @@ function calculateRungeKutta(event) {
         let y = y0;
         let n = 0;
         
-        results.push({ n, x, y, k1: '-', k2: '-', k3: '-', k4: '-' });
+        results.push({ i: 0, xi: x, k1: '-', k2: '-', k3: '-', k4: '-', yNext: y });
         
         while (x < xf - 0.0001) {
+            const xi = x;
             const k1 = evaluateFunction(funcStr, { x, y });
             const k2 = evaluateFunction(funcStr, { x: x + h/2, y: y + h*k1/2 });
             const k3 = evaluateFunction(funcStr, { x: x + h/2, y: y + h*k2/2 });
@@ -301,13 +307,13 @@ function calculateRungeKutta(event) {
             n++;
             
             results.push({ 
-                n, 
-                x: roundTo(x, 6), 
-                y: roundTo(y, 6), 
-                k1: roundTo(k1, 6), 
-                k2: roundTo(k2, 6), 
-                k3: roundTo(k3, 6), 
-                k4: roundTo(k4, 6) 
+                i:     n,
+                xi:    roundTo(xi, 6),
+                k1:    roundTo(k1, 6), 
+                k2:    roundTo(k2, 6), 
+                k3:    roundTo(k3, 6), 
+                k4:    roundTo(k4, 6),
+                yNext: roundTo(y,  6)
             });
         }
         
@@ -335,7 +341,7 @@ function displayRungeResults(results, funcStr) {
         
         <div class="result-summary">
             <p>Función: <span class="highlight">f(x, y) = ${funcStr}</span></p>
-            <p>Valor final: <span class="highlight">y(${lastResult.x}) ≈ ${lastResult.y}</span></p>
+            <p>Valor final: <span class="highlight">y(${roundTo(lastResult.xi + (results.length > 1 ? parseFloat(document.getElementById('rungeH').value) : 0), 6)}) ≈ ${lastResult.yNext}</span></p>
             <p>Número de iteraciones: <span class="highlight">${results.length - 1}</span></p>
         </div>
 
@@ -347,25 +353,25 @@ function displayRungeResults(results, funcStr) {
             <table class="result-table">
                 <thead>
                     <tr>
-                        <th>n</th>
-                        <th>xₙ</th>
-                        <th>yₙ</th>
+                        <th>i</th>
+                        <th>xᵢ</th>
                         <th>k₁</th>
                         <th>k₂</th>
                         <th>k₃</th>
                         <th>k₄</th>
+                        <th>yᵢ₊₁</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${results.map(r => `
                         <tr>
-                            <td>${r.n}</td>
-                            <td>${r.x}</td>
-                            <td>${r.y}</td>
+                            <td>${r.i}</td>
+                            <td>${r.xi}</td>
                             <td>${r.k1}</td>
                             <td>${r.k2}</td>
                             <td>${r.k3}</td>
                             <td>${r.k4}</td>
+                            <td>${r.yNext}</td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -373,8 +379,8 @@ function displayRungeResults(results, funcStr) {
         </div>
     `;
 
-    const labels = results.map(r => typeof r.x === 'number' ? r.x.toFixed(4) : r.x);
-    const yValues = results.map(r => typeof r.y === 'number' ? r.y : null);
+    const labels  = results.map(r => typeof r.xi === 'number' ? r.xi.toFixed(4) : String(r.xi));
+    const yValues = results.map(r => typeof r.yNext === 'number' ? r.yNext : null);
     const k1Values = results.map(r => typeof r.k1 === 'number' ? r.k1 : null);
 
     renderChart('rungeChart', labels, [
@@ -442,19 +448,14 @@ function calculateNewtonRaphson(event) {
             
             const xNew = x - fx / fpx;
             const error = Math.abs(xNew - x);
-            // Error relativo porcentual
-            const errorRel = Math.abs(xNew) > 1e-12
-                ? Math.abs((xNew - x) / xNew) * 100
-                : error;
 
             results.push({
-                n: n + 1,
-                x:        roundTo(x,      8),
-                fx:       roundTo(fx,     8),
-                fpx:      roundTo(fpx,    8),
-                xNew:     roundTo(xNew,   8),
-                error:    roundTo(error,  10),
-                errorRel: roundTo(errorRel, 6)
+                iter: n + 1,
+                x:    roundTo(x,    8),
+                fx:   roundTo(fx,   8),
+                fpx:  roundTo(fpx,  8),
+                xNew: roundTo(xNew, 8),
+                error: error.toExponential(2)
             });
 
             totalIter = n + 1;
@@ -499,7 +500,7 @@ function displayNewtonResults(results, funcStr, derivStr, converged, tol, totalI
         <div class="result-summary">
             <p>Función: <span class="highlight">f(x) = ${funcStr}</span></p>
             <p>${derivInfo}</p>
-            <p>Raíz encontrada: <span class="highlight">x ≈ ${lastResult.xNew !== '-' ? lastResult.xNew : lastResult.x}</span></p>
+            <p>Raíz encontrada: <span class="highlight">x ≈ ${lastResult.xNew}</span></p>
             <p>f(xₙ) en última iteración: <span class="highlight">${lastResult.fx}</span></p>
             <p>Tolerancia: ${tol}</p>
             ${statusMessage}
@@ -513,25 +514,23 @@ function displayNewtonResults(results, funcStr, derivStr, converged, tol, totalI
             <table class="result-table">
                 <thead>
                     <tr>
-                        <th>n</th>
+                        <th>Iter</th>
                         <th>xₙ</th>
                         <th>f(xₙ)</th>
                         <th>f'(xₙ)</th>
                         <th>xₙ₊₁</th>
-                        <th>Error abs |xₙ₊₁ - xₙ|</th>
-                        <th>Error rel (%)</th>
+                        <th>Error</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${results.map(r => `
                         <tr>
-                            <td>${r.n}</td>
+                            <td>${r.iter}</td>
                             <td>${r.x}</td>
                             <td>${r.fx}</td>
                             <td>${r.fpx}</td>
                             <td>${r.xNew}</td>
                             <td>${r.error}</td>
-                            <td>${r.errorRel}</td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -539,9 +538,9 @@ function displayNewtonResults(results, funcStr, derivStr, converged, tol, totalI
         </div>
     `;
 
-    const iterLabels = results.map(r => `n=${r.n}`);
-    const xValues    = results.map(r => typeof r.x   === 'number' ? r.x   : null);
-    const fxValues   = results.map(r => typeof r.fx  === 'number' ? r.fx  : null);
+    const iterLabels = results.map(r => `iter=${r.iter}`);
+    const xValues    = results.map(r => typeof r.x  === 'number' ? r.x  : null);
+    const fxValues   = results.map(r => typeof r.fx === 'number' ? r.fx : null);
 
     // Destruir instancia previa si existe
     if (chartInstances['newtonChart']) {
