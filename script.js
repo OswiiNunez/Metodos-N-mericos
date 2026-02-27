@@ -143,7 +143,7 @@ function calculateEuler(event) {
         let y = y0;
         let n = 0;
         
-        results.push({ n, x, y, k1: '-', yPredictor: '-', k2: '-' });
+        results.push({ n, x, y, k1: '-', yPredictor: '-', k2: '-', error: '-' });
         
         while (x < xf - 0.0001) {
             const k1 = evaluateFunction(funcStr, { x, y });
@@ -151,17 +151,24 @@ function calculateEuler(event) {
             const xNext = x + h;
             const k2 = evaluateFunction(funcStr, { x: xNext, y: yPredictor });
             
+            const yPrev = y;
             y = y + (h / 2) * (k1 + k2);
             x = xNext;
             n++;
             
+            // Error relativo porcentual: |(y_nuevo - y_predictor) / y_nuevo| * 100
+            const error = Math.abs(y) > 1e-12 
+                ? roundTo(Math.abs((y - yPredictor) / y) * 100, 6)
+                : roundTo(Math.abs(y - yPredictor), 6);
+
             results.push({ 
                 n, 
                 x: roundTo(x, 6), 
                 y: roundTo(y, 6), 
                 k1: roundTo(k1, 6), 
                 yPredictor: roundTo(yPredictor, 6), 
-                k2: roundTo(k2, 6) 
+                k2: roundTo(k2, 6),
+                error
             });
         }
         
@@ -207,6 +214,7 @@ function displayEulerResults(results, funcStr) {
                         <th>k₁ = f(xₙ, yₙ)</th>
                         <th>ỹₙ₊₁ (predictor)</th>
                         <th>k₂ = f(xₙ₊₁, ỹₙ₊₁)</th>
+                        <th>Error relativo (%)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -218,6 +226,7 @@ function displayEulerResults(results, funcStr) {
                             <td>${r.k1}</td>
                             <td>${r.yPredictor}</td>
                             <td>${r.k2}</td>
+                            <td>${r.error}</td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -412,14 +421,15 @@ function calculateNewtonRaphson(event) {
         const results = [];
         let x = x0;
         let converged = false;
+        let totalIter = 0;
         
         for (let n = 0; n < maxIter; n++) {
             const fx = evaluateFunction(funcStr, { x });
             
             let fpx;
             if (derivStr.trim() === '') {
-                const h = 0.0001;
-                const fxPlus = evaluateFunction(funcStr, { x: x + h });
+                const h = 1e-7;
+                const fxPlus  = evaluateFunction(funcStr, { x: x + h });
                 const fxMinus = evaluateFunction(funcStr, { x: x - h });
                 fpx = (fxPlus - fxMinus) / (2 * h);
             } else {
@@ -432,35 +442,31 @@ function calculateNewtonRaphson(event) {
             
             const xNew = x - fx / fpx;
             const error = Math.abs(xNew - x);
-            
+            // Error relativo porcentual
+            const errorRel = Math.abs(xNew) > 1e-12
+                ? Math.abs((xNew - x) / xNew) * 100
+                : error;
+
             results.push({
-                n,
-                x: roundTo(x, 8),
-                fx: roundTo(fx, 8),
-                fpx: roundTo(fpx, 8),
-                xNew: roundTo(xNew, 8),
-                error: roundTo(error, 10)
+                n: n + 1,
+                x:        roundTo(x,      8),
+                fx:       roundTo(fx,     8),
+                fpx:      roundTo(fpx,    8),
+                xNew:     roundTo(xNew,   8),
+                error:    roundTo(error,  10),
+                errorRel: roundTo(errorRel, 6)
             });
-            
+
+            totalIter = n + 1;
+            x = xNew;
+
             if (error < tol) {
                 converged = true;
-                x = xNew;
-                const fxFinal = evaluateFunction(funcStr, { x });
-                results.push({
-                    n: n + 1,
-                    x: roundTo(x, 8),
-                    fx: roundTo(fxFinal, 8),
-                    fpx: '-',
-                    xNew: '-',
-                    error: '-'
-                });
                 break;
             }
-            
-            x = xNew;
         }
         
-        displayNewtonResults(results, funcStr, derivStr, converged, tol);
+        displayNewtonResults(results, funcStr, derivStr, converged, tol, totalIter);
         
     } catch (error) {
         resultsContainer.innerHTML = `
@@ -472,16 +478,16 @@ function calculateNewtonRaphson(event) {
     }
 }
 
-function displayNewtonResults(results, funcStr, derivStr, converged, tol) {
+function displayNewtonResults(results, funcStr, derivStr, converged, tol, totalIter) {
     const container = document.getElementById('newtonResults');
     const lastResult = results[results.length - 1];
     
     const statusMessage = converged 
-        ? `<p style="color: var(--success-color);">✓ Convergió en ${results.length - 1} iteraciones</p>`
+        ? `<p style="color: var(--success-color);">✓ Convergió en ${totalIter} iteración(es)</p>`
         : `<p style="color: var(--error-color);">✗ No convergió en el máximo de iteraciones</p>`;
     
     const derivInfo = derivStr.trim() === '' 
-        ? 'Derivada numérica (h = 0.0001)' 
+        ? 'Derivada: numérica (diferencia central, h = 1×10⁻⁷)' 
         : `f'(x) = ${derivStr}`;
     
     container.innerHTML = `
@@ -493,8 +499,8 @@ function displayNewtonResults(results, funcStr, derivStr, converged, tol) {
         <div class="result-summary">
             <p>Función: <span class="highlight">f(x) = ${funcStr}</span></p>
             <p>${derivInfo}</p>
-            <p>Raíz encontrada: <span class="highlight">x ≈ ${lastResult.x}</span></p>
-            <p>f(x) en la raíz: <span class="highlight">${lastResult.fx}</span></p>
+            <p>Raíz encontrada: <span class="highlight">x ≈ ${lastResult.xNew !== '-' ? lastResult.xNew : lastResult.x}</span></p>
+            <p>f(xₙ) en última iteración: <span class="highlight">${lastResult.fx}</span></p>
             <p>Tolerancia: ${tol}</p>
             ${statusMessage}
         </div>
@@ -512,7 +518,8 @@ function displayNewtonResults(results, funcStr, derivStr, converged, tol) {
                         <th>f(xₙ)</th>
                         <th>f'(xₙ)</th>
                         <th>xₙ₊₁</th>
-                        <th>Error |xₙ₊₁ - xₙ|</th>
+                        <th>Error abs |xₙ₊₁ - xₙ|</th>
+                        <th>Error rel (%)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -524,6 +531,7 @@ function displayNewtonResults(results, funcStr, derivStr, converged, tol) {
                             <td>${r.fpx}</td>
                             <td>${r.xNew}</td>
                             <td>${r.error}</td>
+                            <td>${r.errorRel}</td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -531,11 +539,9 @@ function displayNewtonResults(results, funcStr, derivStr, converged, tol) {
         </div>
     `;
 
-    // Para Newton: gráfica de convergencia — x_n vs iteración, y f(x_n) vs iteración
     const iterLabels = results.map(r => `n=${r.n}`);
-    const xValues = results.map(r => typeof r.x === 'number' ? r.x : null);
-    const fxValues = results.map(r => typeof r.fx === 'number' ? r.fx : null);
-    const errorValues = results.map(r => typeof r.error === 'number' ? r.error : null);
+    const xValues    = results.map(r => typeof r.x   === 'number' ? r.x   : null);
+    const fxValues   = results.map(r => typeof r.fx  === 'number' ? r.fx  : null);
 
     // Destruir instancia previa si existe
     if (chartInstances['newtonChart']) {
