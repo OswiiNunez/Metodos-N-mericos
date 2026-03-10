@@ -418,7 +418,6 @@ function calculateNewtonRaphson(event) {
     event.preventDefault();
     
     const funcStr = document.getElementById('newtonFunction').value;
-    const derivStr = document.getElementById('newtonDerivative').value;
     const x0 = parseFloat(document.getElementById('newtonX0').value);
     const tol = parseFloat(document.getElementById('newtonTol').value);
     const maxIter = parseInt(document.getElementById('newtonMaxIter').value);
@@ -434,15 +433,10 @@ function calculateNewtonRaphson(event) {
         for (let n = 0; n < maxIter; n++) {
             const fx = evaluateFunction(funcStr, { x });
             
-            let fpx;
-            if (derivStr.trim() === '') {
-                const h = 1e-7;
-                const fxPlus  = evaluateFunction(funcStr, { x: x + h });
-                const fxMinus = evaluateFunction(funcStr, { x: x - h });
-                fpx = (fxPlus - fxMinus) / (2 * h);
-            } else {
-                fpx = evaluateFunction(derivStr, { x });
-            }
+            const h = 1e-7;
+            const fxPlus  = evaluateFunction(funcStr, { x: x + h });
+            const fxMinus = evaluateFunction(funcStr, { x: x - h });
+            const fpx = (fxPlus - fxMinus) / (2 * h);
             
             if (Math.abs(fpx) < 1e-12) {
                 throw new Error('La derivada es muy cercana a cero. Intenta con otro valor inicial.');
@@ -469,7 +463,7 @@ function calculateNewtonRaphson(event) {
             }
         }
         
-        displayNewtonResults(results, funcStr, derivStr, converged, tol, totalIter);
+        displayNewtonResults(results, funcStr, converged, tol, totalIter);
         
     } catch (error) {
         resultsContainer.innerHTML = `
@@ -481,7 +475,7 @@ function calculateNewtonRaphson(event) {
     }
 }
 
-function displayNewtonResults(results, funcStr, derivStr, converged, tol, totalIter) {
+function displayNewtonResults(results, funcStr, converged, tol, totalIter) {
     const container = document.getElementById('newtonResults');
     const lastResult = results[results.length - 1];
     
@@ -489,9 +483,7 @@ function displayNewtonResults(results, funcStr, derivStr, converged, tol, totalI
         ? `<p style="color: var(--success-color);">✓ Convergió en ${totalIter} iteración(es)</p>`
         : `<p style="color: var(--error-color);">✗ No convergió en el máximo de iteraciones</p>`;
     
-    const derivInfo = derivStr.trim() === '' 
-        ? 'Derivada: numérica (diferencia central, h = 1×10⁻⁷)' 
-        : `f'(x) = ${derivStr}`;
+    const derivInfo = 'Derivada: numérica (diferencia central, h = 1×10⁻⁷)';
     
     container.innerHTML = `
         <div class="results-header">
@@ -637,6 +629,17 @@ function displayNewtonResults(results, funcStr, derivStr, converged, tol, totalI
 function roundTo(num, decimals) {
     if (typeof num !== 'number' || isNaN(num)) return num;
     return Math.round(num * Math.pow(10, decimals)) / Math.pow(10, decimals);
+}
+
+function clearForm(method) {
+    const panel = document.getElementById(`${method}Panel`);
+    const inputs = panel.querySelectorAll('input');
+    inputs.forEach(input => {
+        if (input.type === 'text') input.value = '';
+        else if (input.type === 'number') input.value = '';
+    });
+    const resultsContainer = document.getElementById(`${method}Results`);
+    if (resultsContainer) resultsContainer.innerHTML = '';
 }
 
 document.addEventListener('DOMContentLoaded', function() {

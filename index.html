@@ -107,9 +107,14 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="calculate-btn">
-                        <i class="fas fa-play"></i> Calcular
-                    </button>
+                    <div class="btn-group">
+                        <button type="submit" class="calculate-btn">
+                            <i class="fas fa-play"></i> Calcular
+                        </button>
+                        <button type="button" class="clear-btn" onclick="clearForm('euler')">
+                            <i class="fas fa-eraser"></i> Limpiar
+                        </button>
+                    </div>
                 </form>
 
                 <div class="results-container" id="eulerResults"></div>
@@ -178,9 +183,14 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="calculate-btn">
-                        <i class="fas fa-play"></i> Calcular
-                    </button>
+                    <div class="btn-group">
+                        <button type="submit" class="calculate-btn">
+                            <i class="fas fa-play"></i> Calcular
+                        </button>
+                        <button type="button" class="clear-btn" onclick="clearForm('runge')">
+                            <i class="fas fa-eraser"></i> Limpiar
+                        </button>
+                    </div>
                 </form>
 
                 <div class="results-container" id="rungeResults"></div>
@@ -200,7 +210,7 @@
                     <p>Es un método iterativo para encontrar <strong>raíces de funciones</strong>, es decir, valores de x donde f(x) = 0.</p>
                     <p>Utiliza la derivada de la función para aproximarse rápidamente a la raíz:</p>
                     <div class="formula">x<sub>n+1</sub> = x<sub>n</sub> - f(x<sub>n</sub>) / f'(x<sub>n</sub>)</div>
-                    <p><strong>Nota:</strong> Puedes ingresar la derivada manualmente o dejar que se calcule numéricamente.</p>
+                    <p><strong>Nota:</strong> La derivada se calcula numéricamente de forma automática.</p>
                 </div>
 
                 <form class="input-form" onsubmit="calculateNewtonRaphson(event)">
@@ -214,15 +224,7 @@
                         <small>Usa: +, -, *, /, **, Math.sin(), Math.cos(), Math.exp(), Math.log(), Math.sqrt()</small>
                     </div>
 
-                    <div class="form-group">
-                        <label for="newtonDerivative">
-                            <i class="fas fa-superscript"></i> Derivada f'(x) <span class="optional">(opcional)</span>
-                        </label>
-                        <input type="text" id="newtonDerivative"
-                               value="3*x**2 - 2"
-                               placeholder="Ej: 3*x**2 - 2 (dejar vacío para cálculo numérico)">
-                        <small>Si se deja vacío, se calculará numéricamente</small>
-                    </div>
+
                     
                     <div class="form-row">
                         <div class="form-group">
@@ -248,9 +250,14 @@
                         <input type="number" id="newtonMaxIter" value="100" required>
                     </div>
 
-                    <button type="submit" class="calculate-btn">
-                        <i class="fas fa-play"></i> Calcular
-                    </button>
+                    <div class="btn-group">
+                        <button type="submit" class="calculate-btn">
+                            <i class="fas fa-play"></i> Calcular
+                        </button>
+                        <button type="button" class="clear-btn" onclick="clearForm('newton')">
+                            <i class="fas fa-eraser"></i> Limpiar
+                        </button>
+                    </div>
                 </form>
 
                 <div class="results-container" id="newtonResults"></div>
