@@ -37,6 +37,8 @@ function toggleInfo(infoId) {
 function evaluateFunction(funcStr, variables) {
     try {
         let expression = funcStr;
+        // Convertir ^ a ** para que la exponenciación funcione correctamente en JS
+        expression = expression.replace(/\^/g, '**');
         for (const [key, value] of Object.entries(variables)) {
             const regex = new RegExp(`\\b${key}\\b`, 'g');
             expression = expression.replace(regex, `(${value})`);
